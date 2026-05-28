@@ -1,5 +1,5 @@
 const SHEET_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vRxwCo5Z1qQNx_W4-PLSLjy5GHGFARpRSTgPfQnm3EKKHy-yPzdYJWqdO2hty666bfo6nuDvJEYJdIb/pub?output=csv";
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vRxwCo5Z1qQNx_W4-PLSLjy5GHGFARpRSTgPfQnm3EKKHy-yPzdYJWqdO2hty666bfo6nuDvJEYJdIb/pub?gid=1909276998&single=true&output=csv";
 
 let datosGlobales = [];
 
