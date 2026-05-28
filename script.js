@@ -6,19 +6,27 @@ let areasChart;
 let horasChart;
 
 async function loadData() {
-  Papa.parse(SHEET_URL, {
-    download: true,
-    header: true,
-    complete: function(results) {
-      datosGlobales = results.data;
-      procesarDatos(datosGlobales);
-      document.getElementById("ultimaActualizacion").innerText =
-        "Última actualización: " + new Date().toLocaleString();
-    },
-    error: function(err) {
-      console.error("Error al cargar datos:", err);
-    }
+  try {
+    const response = await fetch(SHEET_URL);
+    const csvText = await response.text();
+    datosGlobales = parseCSV(csvText);
+    procesarDatos(datosGlobales);
+    document.getElementById("ultimaActualizacion").innerText =
+      "Última actualización: " + new Date().toLocaleString();
+  } catch (error) {
+    console.error("Error al cargar datos:", error);
+  }
+}
+
+function parseCSV(csvText) {
+  const rows = csvText.split("\n").map(r => r.split(","));
+  const headers = rows[0].map(h => h.trim());
+  const data = rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = row[i]?.trim());
+    return obj;
   });
+  return data.filter(r => r.FECHA && r.AREA);
 }
 
 function procesarDatos(data){
@@ -37,11 +45,11 @@ function cargarTabla(data){
   data.slice(0,12).forEach(row=>{
     tabla.innerHTML += `
       <tr>
-        <td>${row.FECHA}</td>
-        <td>${row.INGRESO}</td>
-        <td>${row.VISITANTE}</td>
-        <td>${row.AREA}</td>
-        <td>${row.SALIDA}</td>
+        <td>${row.FECHA || "-"}</td>
+        <td>${row.INGRESO || "-"}</td>
+        <td>${row.VISITANTE || "-"}</td>
+        <td>${row.AREA || "-"}</td>
+        <td>${row.SALIDA || "-"}</td>
       </tr>
     `;
   });
@@ -50,7 +58,8 @@ function cargarTabla(data){
 function cargarGraficaAreas(data){
   const conteo = {};
   data.forEach(r=>{
-    conteo[r.AREA] = (conteo[r.AREA] || 0) + 1;
+    const area = r.AREA?.trim() || "Sin área";
+    conteo[area] = (conteo[area] || 0) + 1;
   });
   const labels = Object.keys(conteo);
   const valores = Object.values(conteo);
@@ -60,6 +69,10 @@ function cargarGraficaAreas(data){
     data:{
       labels:labels,
       datasets:[{ label:"Accesos", data:valores, backgroundColor:"#38bdf8" }]
+    },
+    options:{
+      plugins:{ legend:{ labels:{ color:"white" } } },
+      scales:{ x:{ ticks:{ color:"white" } }, y:{ ticks:{ color:"white" } } }
     }
   });
 }
@@ -67,7 +80,7 @@ function cargarGraficaAreas(data){
 function cargarGraficaHoras(data){
   const horas = {};
   data.forEach(r=>{
-    const hora = r.INGRESO?.split(":")[0];
+    const hora = r.INGRESO?.split(":")[0] || "Sin hora";
     horas[hora] = (horas[hora] || 0) + 1;
   });
   const labels = Object.keys(horas);
@@ -78,6 +91,10 @@ function cargarGraficaHoras(data){
     data:{
       labels:labels,
       datasets:[{ label:"Ingresos", data:valores, borderColor:"#38bdf8", fill:false }]
+    },
+    options:{
+      plugins:{ legend:{ labels:{ color:"white" } } },
+      scales:{ x:{ ticks:{ color:"white" } }, y:{ ticks:{ color:"white" } } }
     }
   });
 }
