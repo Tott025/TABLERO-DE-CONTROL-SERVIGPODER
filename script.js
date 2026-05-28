@@ -9,13 +9,8 @@ async function loadData() {
   Papa.parse(SHEET_URL, {
     download: true,
     header: true,
-    skipEmptyLines: true,
     complete: function(results) {
-      datosGlobales = results.data.filter(r => r.FECHA && r.AREA);
-      if (datosGlobales.length === 0) {
-        console.warn("No se encontraron datos válidos en el CSV.");
-        return;
-      }
+      datosGlobales = results.data;
       procesarDatos(datosGlobales);
       document.getElementById("ultimaActualizacion").innerText =
         "Última actualización: " + new Date().toLocaleString();
@@ -42,11 +37,11 @@ function cargarTabla(data){
   data.slice(0,12).forEach(row=>{
     tabla.innerHTML += `
       <tr>
-        <td>${row.FECHA || "-"}</td>
-        <td>${row.INGRESO || "-"}</td>
-        <td>${row.VISITANTE || "-"}</td>
-        <td>${row.AREA || "-"}</td>
-        <td>${row.SALIDA || "-"}</td>
+        <td>${row.FECHA}</td>
+        <td>${row.INGRESO}</td>
+        <td>${row.VISITANTE}</td>
+        <td>${row.AREA}</td>
+        <td>${row.SALIDA}</td>
       </tr>
     `;
   });
@@ -55,8 +50,7 @@ function cargarTabla(data){
 function cargarGraficaAreas(data){
   const conteo = {};
   data.forEach(r=>{
-    const area = r.AREA?.trim() || "Sin área";
-    conteo[area] = (conteo[area] || 0) + 1;
+    conteo[r.AREA] = (conteo[r.AREA] || 0) + 1;
   });
   const labels = Object.keys(conteo);
   const valores = Object.values(conteo);
@@ -66,10 +60,6 @@ function cargarGraficaAreas(data){
     data:{
       labels:labels,
       datasets:[{ label:"Accesos", data:valores, backgroundColor:"#38bdf8" }]
-    },
-    options:{
-      plugins:{ legend:{ labels:{ color:"white" } } },
-      scales:{ x:{ ticks:{ color:"white" } }, y:{ ticks:{ color:"white" } } }
     }
   });
 }
@@ -77,7 +67,7 @@ function cargarGraficaAreas(data){
 function cargarGraficaHoras(data){
   const horas = {};
   data.forEach(r=>{
-    const hora = r.INGRESO?.split(":")[0] || "Sin hora";
+    const hora = r.INGRESO?.split(":")[0];
     horas[hora] = (horas[hora] || 0) + 1;
   });
   const labels = Object.keys(horas);
@@ -88,10 +78,6 @@ function cargarGraficaHoras(data){
     data:{
       labels:labels,
       datasets:[{ label:"Ingresos", data:valores, borderColor:"#38bdf8", fill:false }]
-    },
-    options:{
-      plugins:{ legend:{ labels:{ color:"white" } } },
-      scales:{ x:{ ticks:{ color:"white" } }, y:{ ticks:{ color:"white" } } }
     }
   });
 }
