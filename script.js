@@ -133,4 +133,7 @@ function cargarGraficaHoras(data){
     horas[hora] = (horas[hora] || 0) + 1;
   });
   const labels = Object.keys(horas);
-  const valores = Object
+  const valores = Object.values(horas);
+  if(horasChart){ horasChart.destroy(); }
+  horasChart = new Chart(document.getElementById("horasChart"), {
+    type:"
