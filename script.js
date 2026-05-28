@@ -134,6 +134,42 @@ function cargarGraficaHoras(data){
   });
   const labels = Object.keys(horas);
   const valores = Object.values(horas);
+
   if(horasChart){ horasChart.destroy(); }
+
   horasChart = new Chart(document.getElementById("horasChart"), {
-    type:"
+    type:"line",
+    data:{
+      labels:labels,
+      datasets:[{
+        label:"Ingresos por hora",
+        data:valores,
+        borderColor:"#38bdf8",
+        backgroundColor:"#38bdf8",
+        fill:false
+      }]
+    },
+    options:{
+      plugins:{ legend:{ labels:{ color:"white" } } },
+      scales:{ x:{ ticks:{ color:"white" } }, y:{ ticks:{ color:"white" } } }
+    }
+  });
+}
+
+function filtrarFechas(){
+  const inicio = document.getElementById("fechaInicio").value;
+  const fin = document.getElementById("fechaFin").value;
+  const filtrados = datosGlobales.filter(r=>{
+    const fecha = convertirFecha(r["FECHA"]);
+    return fecha >= new Date(inicio) && fecha <= new Date(fin);
+  });
+  procesarDatos(filtrados);
+}
+
+function convertirFecha(fechaTexto){
+  const partes = fechaTexto.split("/");
+  return new Date(partes[2], partes[1]-1, partes[0]);
+}
+
+loadData();
+setInterval(loadData,30000);
