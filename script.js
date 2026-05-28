@@ -14,6 +14,9 @@ async function loadData() {
       procesarDatos(datosGlobales);
       document.getElementById("ultimaActualizacion").innerText =
         "Última actualización: " + new Date().toLocaleString();
+    },
+    error: function(err) {
+      console.error("Error al cargar datos:", err);
     }
   });
 }
