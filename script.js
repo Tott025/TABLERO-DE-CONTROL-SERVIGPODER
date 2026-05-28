@@ -26,17 +26,44 @@ function parseCSV(csvText) {
     headers.forEach((h, i) => obj[h] = row[i]?.trim());
     return obj;
   });
-  return data.filter(r => r.FECHA && r.AREA);
+  return data.filter(r => r.FECHA && r.AREA && r.INGRESO);
 }
 
 function procesarDatos(data){
+  if(data.length === 0){
+    document.getElementById("totalRegistros").innerText = "0";
+    document.getElementById("personasSitio").innerText = "0";
+    document.getElementById("estanciaPromedio").innerText = "0 h";
+    document.getElementById("efectividad").innerText = "0%";
+    document.getElementById("tablaDatos").querySelector("tbody").innerHTML =
+      "<tr><td colspan='5'>No hay registros disponibles</td></tr>";
+    return;
+  }
+
   document.getElementById("totalRegistros").innerText = data.length;
   document.getElementById("personasSitio").innerText = data.length;
-  document.getElementById("estanciaPromedio").innerText = "1:16 h";
-  document.getElementById("efectividad").innerText = "93%";
+  document.getElementById("estanciaPromedio").innerText = calcularEstanciaPromedio(data);
+  document.getElementById("efectividad").innerText = calcularEfectividad(data);
   cargarTabla(data);
   cargarGraficaAreas(data);
   cargarGraficaHoras(data);
+}
+
+function calcularEstanciaPromedio(data){
+  const tiempos = data.map(r => {
+    const ingreso = new Date(`2026-05-28T${r.INGRESO}`);
+    const salida = new Date(`2026-05-28T${r.SALIDA}`);
+    return (salida - ingreso) / (1000 * 60 * 60);
+  }).filter(t => !isNaN(t));
+  const promedio = tiempos.reduce((a,b)=>a+b,0) / tiempos.length;
+  return promedio ? promedio.toFixed(2) + " h" : "0 h";
+}
+
+function calcularEfectividad(data){
+  const total = data.length;
+  const validos = data.filter(r => r.SALIDA).length;
+  const porcentaje = (validos / total) * 100;
+  return porcentaje.toFixed(0) + "%";
 }
 
 function cargarTabla(data){
@@ -61,14 +88,32 @@ function cargarGraficaAreas(data){
     const area = r.AREA?.trim() || "Sin área";
     conteo[area] = (conteo[area] || 0) + 1;
   });
+
   const labels = Object.keys(conteo);
   const valores = Object.values(conteo);
+
+  const coloresPorArea = {
+    "Recepción": "#38bdf8",
+    "Oficina": "#34d399",
+    "Bodega": "#f87171",
+    "Seguridad": "#fbbf24",
+    "Sin área": "#a78bfa"
+  };
+  const coloresFinales = labels.map(a => coloresPorArea[a] || "#c084fc");
+
   if(areasChart){ areasChart.destroy(); }
+
   areasChart = new Chart(document.getElementById("areasChart"), {
     type:"bar",
     data:{
       labels:labels,
-      datasets:[{ label:"Accesos", data:valores, backgroundColor:"#38bdf8" }]
+      datasets:[{
+        label:"Accesos por área",
+        data:valores,
+        backgroundColor:coloresFinales,
+        borderColor:"#1b263b",
+        borderWidth:1
+      }]
     },
     options:{
       plugins:{ legend:{ labels:{ color:"white" } } },
@@ -102,17 +147,4 @@ function cargarGraficaHoras(data){
 function filtrarFechas(){
   const inicio = document.getElementById("fechaInicio").value;
   const fin = document.getElementById("fechaFin").value;
-  const filtrados = datosGlobales.filter(r=>{
-    const fecha = convertirFecha(r.FECHA);
-    return fecha >= new Date(inicio) && fecha <= new Date(fin);
-  });
-  procesarDatos(filtrados);
-}
-
-function convertirFecha(fechaTexto){
-  const partes = fechaTexto.split("/");
-  return new Date(partes[2], partes[1]-1, partes[0]);
-}
-
-loadData();
-setInterval(loadData,30000);
+  const filtrados
