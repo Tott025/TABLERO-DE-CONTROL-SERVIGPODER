@@ -9,8 +9,13 @@ async function loadData() {
   Papa.parse(SHEET_URL, {
     download: true,
     header: true,
+    skipEmptyLines: true,
     complete: function(results) {
-      datosGlobales = results.data.filter(r => r.FECHA && r.AREA); // filtra filas vacías
+      datosGlobales = results.data.filter(r => r.FECHA && r.AREA);
+      if (datosGlobales.length === 0) {
+        console.warn("No se encontraron datos válidos en el CSV.");
+        return;
+      }
       procesarDatos(datosGlobales);
       document.getElementById("ultimaActualizacion").innerText =
         "Última actualización: " + new Date().toLocaleString();
